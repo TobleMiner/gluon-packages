@@ -9,7 +9,7 @@ enum {
 	RESPONDD_CB_ERROR
 };
 
-typedef int (*)(char* json_data, size_t data_len, void* priv) respondd_cb;
+typedef int (*respondd_cb)(char* json_data, size_t data_len, void* priv);
 
 int request(const struct ip6_inaddr*, const char* query, unsigned long timeout_ms, respondd_cb callback, void* cb_priv);
 

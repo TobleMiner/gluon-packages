@@ -36,6 +36,6 @@
 
 #include "librespondd.h"
 
-int request(const struct ip6_inaddr*, const char* query, unsigned long timeout_ms, respondd_cb callback, void* cb_priv) {
+int request(const struct ip6_inaddr* dst, const char* query, unsigned long timeout_ms, respondd_cb callback, void* cb_priv) {
 
 }
