@@ -1,5 +1,6 @@
 /*
    Copyright (c) 2018, Tobias Schramm <tobleminer@gmail.com>
+   
    All rights reserved.
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions are met:
@@ -59,7 +60,7 @@ static inline bool timeout_elapsed(struct timeval *timeout) {
 	return timeout->tv_sec < 0;
 }
 
-int respondd_request(const struct in6_addr *dst, const char* query, struct timeval *timeout_, respondd_cb callback, void *cb_priv) {
+int respondd_request(const struct sockaddr_in6 *dst, const char* query, struct timeval *timeout_, respondd_cb callback, void *cb_priv) {
 	int err = 0;
 
 	struct timeval timeout, now, after;
@@ -70,6 +71,11 @@ int respondd_request(const struct in6_addr *dst, const char* query, struct timev
 	if(sock < 0) {
 		err = sock;
 		goto fail;
+	}
+
+	if(sendto(sock, query, strlen(query), 0, (struct sockaddr*)dst, sizeof(struct sockaddr_in6)) < 0) {
+		err = -errno;
+		goto fail_sock;
 	}
 
 	char rx_buff[RX_BUFF_SIZE];
