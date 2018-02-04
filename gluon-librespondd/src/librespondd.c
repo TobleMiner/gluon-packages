@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -36,6 +37,77 @@
 
 #include "librespondd.h"
 
-int request(const struct ip6_inaddr* dst, const char* query, unsigned long timeout_ms, respondd_cb callback, void* cb_priv) {
+#define RX_BUFF_SIZE 1500
 
+static void getclock(struct timeval *tv) {
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	tv->tv_sec = ts.tv_sec;
+	tv->tv_usec = ts.tv_nsec / 1000;
+}
+
+static ssize_t recv_timeout(int sock, char *buff, size_t max_len, struct timeval *timeout) {
+	if(setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, timeout, sizeof(*timeout))) {
+		return -errno;
+	}
+
+	return recv(sock, buff, max_len, 0);
+}
+
+static inline timeout_elapsed(struct timeval *timeout) {
+	return timeout->tv_sec < 0;
+}
+
+int respondd_request(const struct ip6_inaddr *dst, const char* query, struct timeval *timeout_, respondd_cb callback, void *cb_priv) {
+	int err = 0;
+
+	struct timeval timeout, now, after;
+	timeout = *timeout_;
+	getclock(&now);
+
+	int sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	if(sock < 0) {
+		err = sock;
+		goto fail;
+	}
+
+	char* rx_buff[RX_BUFF_SIZE];
+	memset(rx_buff, 0, RX_BUFF_SIZE);
+
+	getclock(&after);
+	timersub(&after, &after, &before);
+	timersub(&timeout, &timeout, &after);
+
+	while(!timeout_elapsed(timeout)) {
+		getclock(&now);
+
+		ssize_t recv_size = recv_timeout(sock, rx_buff, RX_BUFF_SIZE, &timeout);
+		if(recv_size < 0) {
+			// Not an error, timeout elapsed
+			if(recv_size == EAGAIN) {
+				break;
+			}
+
+			err = recv_size;
+			goto fail_sock;
+		}
+
+		int res = callback(rx_buff, recv_size, cb_priv);
+		if(res) {
+			if(res == RESPONDD_CB_CANCEL) {
+				break;
+			}
+			err = res;
+			goto fail_sock;
+		}
+
+		getclock(&after);
+		timersub(&after, &after, &before);
+		timersub(&timeout, &timeout, &after);		
+	}
+
+fail_sock:
+	close(sock);
+fail:
+	return err;
 }

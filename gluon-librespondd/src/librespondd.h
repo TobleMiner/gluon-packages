@@ -2,15 +2,15 @@
 #define _LIBRESPONDD_H_
 
 #include <stdint.h>
+#include <sys/time.h>
 
 enum {
-	RESPONDD_CB_OK,
-	RESPONDD_CB_CANCEL,
-	RESPONDD_CB_ERROR
+	RESPONDD_CB_OK = 0,
+	RESPONDD_CB_CANCEL
 };
 
 typedef int (*respondd_cb)(char* json_data, size_t data_len, void* priv);
 
-int request(const struct ip6_inaddr*, const char* query, unsigned long timeout_ms, respondd_cb callback, void* cb_priv);
+int respondd_request(const struct ip6_inaddr* dst, const char* query, struct timeval *timeout, respondd_cb callback, void* cb_priv);
 
 #endif
