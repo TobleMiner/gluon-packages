@@ -15,4 +15,4 @@ install:
 	$(LN) /usr/lib/respondd.so.0 /usr/lib/respondd.so
 
 clean:
-	rm librespondd.so
+	rm librespondd.so.0 respondd.o
