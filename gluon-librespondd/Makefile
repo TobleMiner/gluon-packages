@@ -32,7 +32,8 @@ endef
 
 define Package/gluon-librespondd/install
 	$(INSTALL_DIR) $(1)/usr/lib
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/librespondd.so $(1)/usr/lib/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/librespondd.so.0 $(1)/usr/lib/
+	ln -s $(1)/usr/lib/librespondd.so.0 $(1)/usr/lib/librespondd.so
 endef
 
 $(eval $(call BuildPackage,gluon-librespondd))
