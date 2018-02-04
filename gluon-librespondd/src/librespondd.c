@@ -92,6 +92,11 @@ int respondd_request(const struct ip6_inaddr *dst, const char* query, struct tim
 			goto fail_sock;
 		}
 
+		// Socket has been shut down
+		if(recv_size == 0) {
+			break;
+		}
+
 		int res = callback(rx_buff, recv_size, cb_priv);
 		if(res) {
 			if(res == RESPONDD_CB_CANCEL) {
