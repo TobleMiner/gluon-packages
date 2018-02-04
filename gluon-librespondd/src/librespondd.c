@@ -1,5 +1,4 @@
 /*
-   Copyright (c) 2014, Nils Schneider <nils@nilsschneider.net>
    Copyright (c) 2018, Tobias Schramm <tobleminer@gmail.com>
    All rights reserved.
    Redistribution and use in source and binary forms, with or without
@@ -21,19 +20,21 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    */
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <errno.h>
+#include <stdbool.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+
 #include <net/if.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <string.h>
-#include <time.h>
-#include <errno.h>
 
 #include "librespondd.h"
 
@@ -54,11 +55,11 @@ static ssize_t recv_timeout(int sock, char *buff, size_t max_len, struct timeval
 	return recv(sock, buff, max_len, 0);
 }
 
-static inline timeout_elapsed(struct timeval *timeout) {
+static inline bool timeout_elapsed(struct timeval *timeout) {
 	return timeout->tv_sec < 0;
 }
 
-int respondd_request(const struct ip6_inaddr *dst, const char* query, struct timeval *timeout_, respondd_cb callback, void *cb_priv) {
+int respondd_request(const struct in6_addr *dst, const char* query, struct timeval *timeout_, respondd_cb callback, void *cb_priv) {
 	int err = 0;
 
 	struct timeval timeout, now, after;
@@ -71,14 +72,14 @@ int respondd_request(const struct ip6_inaddr *dst, const char* query, struct tim
 		goto fail;
 	}
 
-	char* rx_buff[RX_BUFF_SIZE];
+	char rx_buff[RX_BUFF_SIZE];
 	memset(rx_buff, 0, RX_BUFF_SIZE);
 
 	getclock(&after);
-	timersub(&after, &after, &before);
+	timersub(&after, &after, &now);
 	timersub(&timeout, &timeout, &after);
 
-	while(!timeout_elapsed(timeout)) {
+	while(!timeout_elapsed(&timeout)) {
 		getclock(&now);
 
 		ssize_t recv_size = recv_timeout(sock, rx_buff, RX_BUFF_SIZE, &timeout);
@@ -107,8 +108,8 @@ int respondd_request(const struct ip6_inaddr *dst, const char* query, struct tim
 		}
 
 		getclock(&after);
-		timersub(&after, &after, &before);
-		timersub(&timeout, &timeout, &after);		
+		timersub(&after, &after, &now);
+		timersub(&timeout, &timeout, &after);
 	}
 
 fail_sock:
