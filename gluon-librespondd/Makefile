@@ -6,6 +6,7 @@ PKG_RELEASE:=1
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
+include ../gluon.mk
 
 define Package/gluon-librespondd
   SECTION:=gluon
@@ -30,10 +31,17 @@ define Build/Compile
 	CFLAGS="$(TARGET_CFLAGS)" CPPFLAGS="$(TARGET_CPPFLAGS)" $(MAKE) -C $(PKG_BUILD_DIR) $(TARGET_CONFIGURE_OPTS)
 endef
 
+define Build/InstallDev
+	$(INSTALL_DIR) $(1)/usr/include/librespondd-0
+	$(CP) $(PKG_BUILD_DIR)/librespondd.h $(1)/usr/include/librespondd-0
+	$(INSTALL_DIR) $(1)/usr/lib
+	$(CP) $(PKG_BUILD_DIR)/librespondd.so.0 $(1)/usr/lib/
+	ln -s $(PKG_BUILD_DIR)/librespondd.so.0 $(1)/usr/lib/librespondd.so
+endef
+
 define Package/gluon-librespondd/install
 	$(INSTALL_DIR) $(1)/usr/lib
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/librespondd.so.0 $(1)/usr/lib/
-	ln -s $(1)/usr/lib/librespondd.so.0 $(1)/usr/lib/librespondd.so
 endef
 
 $(eval $(call BuildPackage,gluon-librespondd))

@@ -9,9 +9,10 @@ librespondd:
 	$(CC) -shared $(FPIC) -Wl,-soname,librespondd.so.0 -o librespondd.so.0 librespondd.o -lc
 
 install:
+	@echo Running install target
 	$(CP) librespondd.h /usr/include/librespondd-0
-	$(CP) librespondd.so.o /usr/lib
-	$(LN) /usr/lib/librespondd.so.o /usr/lib/respondd.so
+	$(CP) librespondd.so.0 /usr/lib
+	$(LN) /usr/lib/respondd.so.0 /usr/lib/respondd.so
 
 clean:
 	rm librespondd.so
