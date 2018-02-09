@@ -26,10 +26,47 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
+#include <libubus.h>
 #include <libgluonutil.h>
 
 int main(int argc, char **argv) {
+	int err = 0;
+	struct ubus_context *ubus_ctx;
+
+	ubus_ctx = ubus_connect(NULL);
+	if(!ubus_ctx) {
+		err = -ENOENT;
+		fprintf(stderr, "Failed to connect to ubus\n");
+		goto fail;
+	}
+
+	ubus_add_uloop(ubus_ctx);
+	LIST_HEAD(interfaces);
+	if((err = gluonutil_get_mesh_interfaces(ubus_ctx, &interfaces))) {
+		fprintf(stderr, "Failed to get mesh interfaces: %s(%d)\n", strerror(-err), err);
+		goto fail_ubus;
+	}
+
+	struct gluonutil_interface *iface;
+	list_for_each_entry(iface, &interfaces, list) {
+		if(!iface->device) {
+			printf("Skipping interface with without device\n");
+			continue;
+		}
+		printf("Interface %s:\n", iface->device);
+		printf("\tstate: %s\n", iface->up ? "up" : "down");
+		if(iface->proto) {
+			printf("\tprotocol: %s\n", iface->proto);
+		}
+	}
+
+	gluonutil_free_interfaces(&interfaces);
 	
-	return 0;
+fail_ubus:
+	ubus_free(ubus_ctx);
+fail:
+	return err;
 }
+
