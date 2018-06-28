@@ -7,6 +7,8 @@ PKG_RELEASE:=1
 include $(INCLUDE_DIR)/package.mk
 
 define Package/gluon-radv-filterd
+  SECTION:=net
+  CATEGORY:=Network
   TITLE:=Filter IPv6 router advertisements
   DEPENDS:=+gluon-ebtables +libgluonutil +libbatadv +libnl-tiny
 endef
@@ -22,4 +24,4 @@ define Package/gluon-radv-filterd/install
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/gluon-radv-filterd $(1)/usr/sbin/
 endef
 
-$(eval $(call BuildPackageGluon,gluon-radv-filterd))
+$(eval $(call BuildPackage,gluon-radv-filterd))
