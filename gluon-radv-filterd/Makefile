@@ -4,7 +4,7 @@ PKG_NAME:=gluon-radv-filterd
 PKG_VERSION:=1
 PKG_RELEASE:=1
 
-include ../gluon.mk
+include $(INCLUDE_DIR)/package.mk
 
 define Package/gluon-radv-filterd
   TITLE:=Filter IPv6 router advertisements
